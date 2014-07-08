@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">My Locations</string>
+    <string name="title_locationitem_detail">My location</string>
+    <string name="button_add">Add current location</string>
+    <string name="location_found">Location found</string>
+    <string name="tv_country">Country:&#160;</string>
+    <string name="tv_place">Place:&#160;</string>
+    <string name="iv_flag_description">Country flag</string>
+    <string name="button_add_picture">Take picture</string>
+    <string name="button_remove_content">Remove</string>
+    <string name="location_ambigous">Location already exists</string>
+    <string name="location_not_available">No location available</string>
+    <string name="iv_photo_description">Atached photo</string>
+    <string name="alert_remove_are_you_sure">
+        Are you sure you want to remove this item?\n
+        This operation cannot be undone.
+        </string>
+	<string name="toast_could_not_store_picture">Could not store taken picture</string>
+	<string name="sd_card_in_use">Storage is in use by another app</string>
+</resources>

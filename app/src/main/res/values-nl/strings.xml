@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Mijn Locaties</string>
+    <string name="title_locationitem_detail">Mijn locatie</string>
+    <string name="button_add">Voeg huidige locatie toe</string>
+    <string name="location_found">Locatie gevonden</string>
+    <string name="tv_country">Land:&#160;</string>
+    <string name="tv_place">Plaats:&#160;</string>
+    <string name="iv_flag_description">Landvlag</string>
+    <string name="button_add_picture">Foto toevoegen</string>
+    <string name="button_remove_content">Verwijder</string>
+    <string name="location_ambigous">Locatie bestaat al</string>
+    <string name="location_not_available">Geen locatie gevonden</string>
+    <string name="iv_photo_description">Bijgevoegde foto</string>
+
+</resources>

@@ -1,0 +1,73 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/locationitem_detail"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:baselineAligned="false"
+    android:orientation="horizontal"
+    tools:context=".LocationItemDetailFragment" >
+
+    <include
+        android:id="@+id/placeview_top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        layout="@layout/placeview" />
+
+    <RelativeLayout
+        android:id="@+id/rl_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_alignParentBottom="true" >
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dip"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="4dip"
+            android:layout_marginRight="4dip" />
+
+        <View
+            android:id="@+id/button_seperator"
+            android:layout_width="1dip"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="4dip"
+            android:layout_marginTop="4dip" />
+
+        <Button
+            android:id="@+id/btn_add_picture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_toLeftOf="@id/button_seperator"
+            android:text="@string/button_add_picture" />
+
+        <Button
+            android:id="@+id/btn_remove_content"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@id/button_seperator"
+            android:text="@string/button_remove_content" />
+    </RelativeLayout>
+
+    <include
+        android:id="@+id/ic_progress"
+        layout="@layout/progress_circle" /> 
+
+    <ImageView
+        android:id="@+id/iv_photoView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/rl_buttons"
+        android:layout_below="@+id/placeview_top"
+        android:contentDescription="@string/iv_photo_description"
+        android:visibility="gone" />
+
+</RelativeLayout>
