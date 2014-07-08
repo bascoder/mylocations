@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 Bas van Marwijk
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package nl.basvanmarwijk.mylocations.viewcontroller;
 
 import android.annotation.SuppressLint;
@@ -43,17 +59,8 @@ import nl.basvanmarwijk.mylocations.db.dao.Location_picture;
  * tablets) or a {@link LocationItemDetailActivity} on handsets.
  * TODO threads management
  * TODO get rid of deprecated LocationItem
+ *
  * @author Bas
- * @since revision 1
- * @version 1.9 added extra exception handling for file io
- * @version 1.8 confirmation dialog when deleting item
- * @version 1.7 doesn't delete new picture by accident
- * @version 1.6 progress circle
- * @version 1.5 bitmap scales and loads in separate thread
- * @version 1.4 storage and db tasks in separate threads
- * @version 1.3 add picture view
- * @version 1.2 add picture to location item
- * @version 1.1 remove item
  * @version 1.0 creation
  * @since revision 1
  */
@@ -130,7 +137,8 @@ public class LocationItemDetailFragment extends Fragment {
             tvPlace.setText(tvPlace.getText() + mItem.getPlace());
             imgView.setImageBitmap(
                     ExternalStorageHelper.readBitmap(
-                    Uri.parse(mItem.getFlag_path())));
+                            Uri.parse(mItem.getFlag_path()))
+            );
 
             // verander de action bar title
             String title = String.format(Locale.getDefault(), "%s: %s, %s",
@@ -241,11 +249,11 @@ public class LocationItemDetailFragment extends Fragment {
 
             @Override
             protected Void doInBackground(Void... params) {
-               // TODO add pictures to db
+                // TODO add pictures to db
 
                 try {
                     //update in db
-                   App.getDbManager().updateLocation(mItem);
+                    App.getDbManager().updateLocation(mItem);
                 } catch (Exception e) {
                     getActivity().runOnUiThread(
                             new ToastRunnable(
@@ -277,7 +285,7 @@ public class LocationItemDetailFragment extends Fragment {
     private void updateImageView() {
         if (mItem != null) {
             final List<Location_picture> pictures = mItem.getFk_location_picture();
-            if(pictures.isEmpty()){
+            if (pictures.isEmpty()) {
                 return;
             }
             final Uri picLocation = Uri.parse(pictures.get(pictures.size() - 1).getPicture_path());
@@ -390,7 +398,7 @@ public class LocationItemDetailFragment extends Fragment {
         @Override
         public void run() {
             // runs itself in UI thread
-            if(inUiThread())
+            if (inUiThread())
                 toast.show();
             else
                 runOnUiThread();
@@ -398,9 +406,10 @@ public class LocationItemDetailFragment extends Fragment {
 
         /**
          * TODO test
+         *
          * @return true if this methods is called from UI thread
          */
-        private boolean inUiThread(){
+        private boolean inUiThread() {
             return Looper.myLooper() == Looper.getMainLooper();
         }
 

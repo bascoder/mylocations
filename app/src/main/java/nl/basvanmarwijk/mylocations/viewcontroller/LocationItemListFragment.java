@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 Bas van Marwijk
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package nl.basvanmarwijk.mylocations.viewcontroller;
 
 import android.annotation.SuppressLint;
@@ -30,7 +46,6 @@ import nl.basvanmarwijk.mylocations.logic.PlaceDownloaderTask;
  * interface.
  *
  * @author Bas
- * @version 1.1 use greendao and cursoradapter
  * @version 1.0 creation
  * @since revision 1
  */
@@ -38,37 +53,10 @@ public class LocationItemListFragment extends ListFragment implements
         PlaceDownloaderTask.Callback {
 
     /**
-     * A callback interface that all activities containing this fragment must
-     * implement. This mechanism allows activities to be notified of item
-     * selections.
-     */
-    public interface Callbacks {
-        /**
-         * Callback for when an item has been selected.
-         */
-        public void onItemSelected(nl.basvanmarwijk.mylocations.db.dao.Location item);
-    }
-
-    private BaseAdapter adapter;
-
-    /**
      * The serialization (saved instance state) Bundle key representing the
      * activated item position. Only used on tablets.
      */
     private static final String STATE_ACTIVATED_POSITION = "activated_position";
-    private boolean refreshNeeded = true;
-
-    /**
-     * The fragment's current callback object, which is notified of list item
-     * clicks.
-     */
-    private Callbacks mCallbacks = sDummyCallbacks;
-
-    /**
-     * The current activated item position. Only used on tablets.
-     */
-    private int mActivatedPosition = ListView.INVALID_POSITION;
-
     /**
      * A dummy implementation of the {@link Callbacks} interface that does
      * nothing. Used only when this fragment is not attached to an activity.
@@ -78,6 +66,17 @@ public class LocationItemListFragment extends ListFragment implements
         public void onItemSelected(nl.basvanmarwijk.mylocations.db.dao.Location item) {
         }
     };
+    /**
+     * The fragment's current callback object, which is notified of list item
+     * clicks.
+     */
+    private Callbacks mCallbacks = sDummyCallbacks;
+    private BaseAdapter adapter;
+    private boolean refreshNeeded = true;
+    /**
+     * The current activated item position. Only used on tablets.
+     */
+    private int mActivatedPosition = ListView.INVALID_POSITION;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -85,7 +84,6 @@ public class LocationItemListFragment extends ListFragment implements
      */
     public LocationItemListFragment() {
     }
-
 
     @Override
     public void onAttach(Activity activity) {
@@ -221,10 +219,9 @@ public class LocationItemListFragment extends ListFragment implements
 
     /**
      * Refreshes list adapter
-     *
      */
     private void refreshAdapter() {
-        if(refreshNeeded) {
+        if (refreshNeeded) {
             adapter.notifyDataSetChanged();
         }
     }
@@ -285,5 +282,17 @@ public class LocationItemListFragment extends ListFragment implements
     @Override
     public void onProgress(byte progress) {
         // ignore
+    }
+
+    /**
+     * A callback interface that all activities containing this fragment must
+     * implement. This mechanism allows activities to be notified of item
+     * selections.
+     */
+    public interface Callbacks {
+        /**
+         * Callback for when an item has been selected.
+         */
+        public void onItemSelected(nl.basvanmarwijk.mylocations.db.dao.Location item);
     }
 }

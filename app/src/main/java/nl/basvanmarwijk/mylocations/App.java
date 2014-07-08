@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 Bas van Marwijk
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package nl.basvanmarwijk.mylocations;
 
 import android.app.Application;
@@ -14,23 +30,11 @@ import nl.basvanmarwijk.mylocations.db.DBManager;
  */
 public class App extends Application {
 
+    private final static String E_MESSAGE = App.class.getCanonicalName()
+            + " has not been initialized yet";
     private static Context appContext;
     private static DBManager dbManager;
     private static boolean DB_OPEN = false;
-
-    private final static String E_MESSAGE = App.class.getCanonicalName()
-            + " has not been initialized yet";
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
-        appContext = getApplicationContext();
-        dbManager = DBManager.createDBManager(appContext);
-        if(dbManager != null){
-            DB_OPEN = true;
-        }
-    }
 
     /**
      * Get application wide context, this context lasts as long as the app
@@ -51,5 +55,16 @@ public class App extends Application {
             throw new IllegalStateException(E_MESSAGE);
         }
         return dbManager;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        appContext = getApplicationContext();
+        dbManager = DBManager.createDBManager(appContext);
+        if (dbManager != null) {
+            DB_OPEN = true;
+        }
     }
 }

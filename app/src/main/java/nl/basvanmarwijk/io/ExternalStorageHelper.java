@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 Bas van Marwijk
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package nl.basvanmarwijk.io;
 
 import android.content.Context;
@@ -20,41 +36,32 @@ import java.util.Locale;
  * Class met static io helper methods
  *
  * @author Bas van Marwijk
- * @since revision 1
- * @version 2.0 added proper exception handling, removed useless synchronization
- * @version 1.6 read/write actions synchronized
- * @version 1.5 storeBitmap long method refactor
- * @version 1.4 fixed bug where {@link storeBitmap(Context context, Bitmap bmp,
- *          String name)} returns null if file already exists
- * @version 1.3 extensions
- * @version 1.2 null checks
- * @version 1.1 support voor mediafiles toevoegen en verwijderen
  * @version 1.0 creation
+ * @since revision 1
  */
 public final class ExternalStorageHelper {
     private final static Class<ExternalStorageHelper> mClass = ExternalStorageHelper.class;
     private final static String TAG = mClass.getCanonicalName();
-    private final static String PNG_EXTENSION = ".png";
-    private final static String JPG_EXTENSION = ".jpg";
-
-    // TODO gebruik App context
-
     private final static String E_SD_NOT_WRITEABLE = TAG
             + ": SD storage is not writable";
     private final static String E_SD_NOT_MOUNTED = TAG
             + " :External media not mounted";
 
+    // TODO gebruik App context
+    private final static String PNG_EXTENSION = ".png";
+    private final static String JPG_EXTENSION = ".jpg";
+
+    private ExternalStorageHelper() {
+    }
+
     /**
      * Creates Uri for media file in SD storage
      *
-     * @param context
-     *            needed context
+     * @param context needed context
      * @return new Uri pointing to file with following format:
-     *         yyyy-MM-dd__HH_mm_ss
-     * @throws IOException
-     *             when file creation failed
-     * @throws IllegalStateException
-     *             when sd not writable
+     * yyyy-MM-dd__HH_mm_ss
+     * @throws IOException           when file creation failed
+     * @throws IllegalStateException when sd not writable
      */
     public static Uri createUriForNewMediaFile(final Context context)
             throws IOException, IllegalStateException {
@@ -103,8 +110,7 @@ public final class ExternalStorageHelper {
      *
      * @param filepath reads bitmap from filepath
      * @return bitmap containing the picture
-     * @throws IllegalStateException
-     *             when SD storage not mounted
+     * @throws IllegalStateException    when SD storage not mounted
      * @throws IllegalArgumentException
      */
     public static Bitmap readBitmap(final Uri filepath)
@@ -135,14 +141,10 @@ public final class ExternalStorageHelper {
     /**
      * Removes file in the given Uri
      *
-     * @param toRemove
-     *            Uri pointing to the file to remove
-     * @throws FileNotFoundException
-     *             when Uri points to invalid file
-     * @throws IOException
-     *             when removal failed
-     * @throws IllegalStateException
-     *             when sd not writable
+     * @param toRemove Uri pointing to the file to remove
+     * @throws FileNotFoundException when Uri points to invalid file
+     * @throws IOException           when removal failed
+     * @throws IllegalStateException when sd not writable
      */
     public synchronized static void removeFileFromUri(Uri toRemove)
             throws IOException, IllegalStateException {
@@ -167,7 +169,7 @@ public final class ExternalStorageHelper {
      * @throws IOException
      * @throws IllegalStateException
      * @see {@link storeBitmap(Context context, Bitmap bmp, String name, boolean
-     *      overwriteOnExists)}
+     * overwriteOnExists)}
      */
     public static Uri storeBitmap(Context context, Bitmap bmp, String name)
             throws IllegalStateException, IOException {
@@ -191,18 +193,13 @@ public final class ExternalStorageHelper {
     /**
      * Stores bitmap to SD storage, returns Uri of the new storage location
      *
-     * @param context
-     *            needed context
-     * @param bmp
-     *            the bitmap to store
-     * @param name
-     *            filename
-     * @param overwriteOnExists
-     *            overwrites file with the same name, with false the Uri to the
-     *            double file will be returned
-     * @throws IllegalArgumentException
-     *             if >= 1 parameter is null
+     * @param context           needed context
+     * @param bmp               the bitmap to store
+     * @param name              filename
+     * @param overwriteOnExists overwrites file with the same name, with false the Uri to the
+     *                          double file will be returned
      * @return Uri of new location
+     * @throws IllegalArgumentException if >= 1 parameter is null
      * @throws IOException
      * @throws IllegalStateException
      */
@@ -258,8 +255,5 @@ public final class ExternalStorageHelper {
         } finally {
             closeOutputStream(os);
         }
-    }
-
-    private ExternalStorageHelper() {
     }
 }
