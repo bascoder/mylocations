@@ -5,6 +5,9 @@
 .log
 .gradlew.bat
 
+#android studio
+/.idea
+
 # Built application files
 *.apk
 *.ap_
