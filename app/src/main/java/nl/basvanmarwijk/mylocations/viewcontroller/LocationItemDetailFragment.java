@@ -88,6 +88,22 @@ public class LocationItemDetailFragment extends Fragment {
     public LocationItemDetailFragment() {
     }
 
+    /**
+     * (non-Javadoc)
+     *
+     * @see android.support.v4.app.Fragment#onActivityResult(int, int,
+     * android.content.Intent)
+     */
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == CAMERA_INTENT_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                updateCameraResult();
+                Log.i(getTag(), pictureUri.getPath());
+            }
+        }
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,19 +116,6 @@ public class LocationItemDetailFragment extends Fragment {
             DBManager dbManager = App.getDbManager();
             Location item = dbManager.getLocationById(id);
             mItem = item;
-        }
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        // restore pictureUri
-        if (savedInstanceState != null) {
-            if (savedInstanceState.containsKey(ARG_CAMERA_URI)) {
-                pictureUri = Uri.parse(savedInstanceState
-                        .getString(ARG_CAMERA_URI));
-            }
         }
     }
 
@@ -204,6 +207,19 @@ public class LocationItemDetailFragment extends Fragment {
     }
 
     @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        // restore pictureUri
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey(ARG_CAMERA_URI)) {
+                pictureUri = Uri.parse(savedInstanceState
+                        .getString(ARG_CAMERA_URI));
+            }
+        }
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         // store uri if it gets destroyed
@@ -217,7 +233,7 @@ public class LocationItemDetailFragment extends Fragment {
 
         try {
             pictureUri = ExternalStorageHelper
-                    .createUriForNewMediaFile(getActivity());
+                    .createUriForNewMediaFile();
             intent.putExtra(MediaStore.EXTRA_OUTPUT, pictureUri);
 
             startActivityForResult(intent, CAMERA_INTENT_REQUEST_CODE);
@@ -229,54 +245,43 @@ public class LocationItemDetailFragment extends Fragment {
     }
 
     /**
-     * (non-Javadoc)
-     *
-     * @see android.support.v4.app.Fragment#onActivityResult(int, int,
-     * android.content.Intent)
+     * Verwijdert item en verlaat activity
      */
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == CAMERA_INTENT_REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                updateCameraResult();
-                Log.i(getTag(), pictureUri.getPath());
-            }
-        }
-    }
-
-    private void updateCameraResult() {
-        new AsyncTask<Void, Void, Void>() {
-
+    private void removeCurrentItem() {
+        // doe werk buiten UI thread
+        new Thread(new Runnable() {
             @Override
-            protected Void doInBackground(Void... params) {
-                // TODO add pictures to db
-
+            public void run() {
+                // delete van db_depecrated
                 try {
-                    //update in db
-                    App.getDbManager().updateLocation(mItem);
-                } catch (Exception e) {
-                    getActivity().runOnUiThread(
-                            new ToastRunnable(
-                                    R.string.toast_could_not_store_picture)
-                    );
-                    // schoon mislukte foto op
+                    App.getDbManager().deleteLocation(mItem);
+                } catch (SQLException e) {
+                    Log.w(TAG, e.getLocalizedMessage());
+                }
+
+                // delete van sd kaart
+                if (!mItem.getFk_location_picture().isEmpty()) {
                     try {
-                        ExternalStorageHelper.removeFileFromUri(pictureUri);
-                    } catch (Exception e2) { // IOException |
-                        // IllegalStateException
-                        Log.w(TAG, "Could not clean failed picture");
+                        for (final Location_picture pic : mItem.getFk_location_picture()) {
+                            ExternalStorageHelper.removeFileFromUri(
+                                    Uri.parse(pic.getPicture_path()));
+                        }
+                    } catch (IllegalStateException e) {
+                        getActivity().runOnUiThread(
+                                new ToastRunnable(R.string.sd_card_in_use));
+                        Log.w(TAG, "sd in use");
+                    } catch (IOException e) {
+                        Log.e(TAG, "Could not remove item from storage");
                     }
                 }
 
-                return null;
+                // release resources
+                mItem = null;
             }
+        }).start();
 
-            @Override
-            protected void onPostExecute(Void result) {
-                updateImageView();
-            }
-
-        }.execute();
+        // quit activity
+        getActivity().finish();
     }
 
     /**
@@ -334,44 +339,39 @@ public class LocationItemDetailFragment extends Fragment {
         }
     }
 
-    /**
-     * Verwijdert item en verlaat activity
-     */
-    private void removeCurrentItem() {
-        // doe werk buiten UI thread
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // delete van db_depecrated
-                try {
-                    App.getDbManager().deleteLocation(mItem);
-                } catch (SQLException e) {
-                    Log.w(TAG, e.getLocalizedMessage());
-                }
+    private void updateCameraResult() {
+        new AsyncTask<Void, Void, Void>() {
 
-                // delete van sd kaart
-                if (!mItem.getFk_location_picture().isEmpty()) {
+            @Override
+            protected Void doInBackground(Void... params) {
+                // TODO add pictures to db
+
+                try {
+                    //update in db
+                    App.getDbManager().updateLocation(mItem);
+                } catch (Exception e) {
+                    getActivity().runOnUiThread(
+                            new ToastRunnable(
+                                    R.string.toast_could_not_store_picture)
+                    );
+                    // schoon mislukte foto op
                     try {
-                        for (final Location_picture pic : mItem.getFk_location_picture()) {
-                            ExternalStorageHelper.removeFileFromUri(
-                                    Uri.parse(pic.getPicture_path()));
-                        }
-                    } catch (IllegalStateException e) {
-                        getActivity().runOnUiThread(
-                                new ToastRunnable(R.string.sd_card_in_use));
-                        Log.w(TAG, "sd in use");
-                    } catch (IOException e) {
-                        Log.e(TAG, "Could not remove item from storage");
+                        ExternalStorageHelper.removeFileFromUri(pictureUri);
+                    } catch (Exception e2) { // IOException |
+                        // IllegalStateException
+                        Log.w(TAG, "Could not clean failed picture");
                     }
                 }
 
-                // release resources
-                mItem = null;
+                return null;
             }
-        }).start();
 
-        // quit activity
-        getActivity().finish();
+            @Override
+            protected void onPostExecute(Void result) {
+                updateImageView();
+            }
+
+        }.execute();
     }
 
     /**

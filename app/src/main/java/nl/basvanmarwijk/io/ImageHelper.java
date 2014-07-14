@@ -34,6 +34,24 @@ import android.view.WindowManager;
 public class ImageHelper {
 
     /**
+     * Returns a scaled bitmap, height gets scaled with the newWidth.
+     *
+     * @param in       , de bitmap om te scalen
+     * @param newWidth de nieuwe breedte
+     * @return een bitmap met newWidth als breedte, hoogte wordt automatisch
+     * meegeschaald
+     */
+    public static Bitmap scaleBitmap(final Bitmap in, int newWidth) {
+        double curWidth = in.getWidth();
+        double curHeight = in.getHeight();
+
+        // calc nieuwe height met de schaal
+        double scale = curWidth / newWidth;
+        double newHeight = curHeight / scale;
+        return scaleBitmap(in, (int) newHeight, newWidth);
+    }
+
+    /**
      * Returns scaled bitmap
      *
      * @param in        bitmap to scale
@@ -57,24 +75,6 @@ public class ImageHelper {
         Bitmap scaledBitmap = Bitmap.createBitmap(in, 0, 0, (int) curWidth,
                 (int) curHeight, matrix, false);
         return scaledBitmap;
-    }
-
-    /**
-     * Returns a scaled bitmap, height gets scaled with the newWidth.
-     *
-     * @param in       , de bitmap om te scalen
-     * @param newWidth de nieuwe breedte
-     * @return een bitmap met newWidth als breedte, hoogte wordt automatisch
-     * meegeschaald
-     */
-    public static Bitmap scaleBitmap(final Bitmap in, int newWidth) {
-        double curWidth = in.getWidth();
-        double curHeight = in.getHeight();
-
-        // calc nieuwe height met de schaal
-        double scale = curWidth / newWidth;
-        double newHeight = curHeight / scale;
-        return scaleBitmap(in, (int) newHeight, newWidth);
     }
 
     /**

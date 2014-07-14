@@ -52,19 +52,6 @@ public class FileHelper {
 
     }
 
-    public static StringBuilder fileToStringBuilder(FileDescriptor file)
-            throws IOException {
-        return fileToStringBuilder(new BufferedReader(new FileReader(file)));
-
-    }
-
-    public static StringBuilder fileToStringBuilder(InputStream in) throws IOException {
-        StringBuilder builder = new StringBuilder();
-
-        builder.append(IOUtils.toString(in));
-        return builder;
-    }
-
     /**
      * Returns StringBuilder from reader in
      *
@@ -89,6 +76,19 @@ public class FileHelper {
                 in.close();
         }
 
+        return builder;
+    }
+
+    public static StringBuilder fileToStringBuilder(FileDescriptor file)
+            throws IOException {
+        return fileToStringBuilder(new BufferedReader(new FileReader(file)));
+
+    }
+
+    public static StringBuilder fileToStringBuilder(InputStream in) throws IOException {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(IOUtils.toString(in));
         return builder;
     }
 

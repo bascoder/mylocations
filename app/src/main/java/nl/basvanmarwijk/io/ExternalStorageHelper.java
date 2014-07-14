@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Bas van Marwijk
+ * Copyright (2014) Bas van Marwijk
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,10 +32,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import nl.basvanmarwijk.mylocations.App;
+
 /**
- * Class met static io helper methods
+ * Class with static io helper methods
  *
  * @author Bas van Marwijk
+ * @version 1.1 - removed context parameters parameters, coupled with {@link nl.basvanmarwijk.mylocations.App}
  * @version 1.0 creation
  * @since revision 1
  */
@@ -47,7 +50,6 @@ public final class ExternalStorageHelper {
     private final static String E_SD_NOT_MOUNTED = TAG
             + " :External media not mounted";
 
-    // TODO gebruik App context
     private final static String PNG_EXTENSION = ".png";
     private final static String JPG_EXTENSION = ".jpg";
 
@@ -57,13 +59,12 @@ public final class ExternalStorageHelper {
     /**
      * Creates Uri for media file in SD storage
      *
-     * @param context needed context
      * @return new Uri pointing to file with following format:
      * yyyy-MM-dd__HH_mm_ss
-     * @throws IOException           when file creation failed
-     * @throws IllegalStateException when sd not writable
+     * @throws IOException           if file creation failed
+     * @throws IllegalStateException if sd not writable
      */
-    public static Uri createUriForNewMediaFile(final Context context)
+    public static Uri createUriForNewMediaFile()
             throws IOException, IllegalStateException {
 
         if (isWritable()) {
@@ -71,6 +72,8 @@ public final class ExternalStorageHelper {
 
             String timeStamp = new SimpleDateFormat(DATE_FORMAT, Locale.US)
                     .format(new Date());
+
+            final Context context = App.getAppContext();
 
             // voeg een bestand toe met jpg extensie
             File file = new File(
@@ -93,14 +96,7 @@ public final class ExternalStorageHelper {
             throw new IllegalStateException(E_SD_NOT_WRITEABLE);
     }
 
-    public static boolean isReadable() {
-        String state = Environment.getExternalStorageState();
-
-        return Environment.MEDIA_MOUNTED.equals(state)
-                || Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);
-    }
-
-    public static boolean isWritable() {
+    private static boolean isWritable() {
         return Environment.getExternalStorageState().equals(
                 Environment.MEDIA_MOUNTED);
     }
@@ -108,23 +104,24 @@ public final class ExternalStorageHelper {
     /**
      * Reads image from Uri to Bitmap.
      *
-     * @param filepath reads bitmap from filepath
+     * @param filePath reads bitmap from filePath
      * @return bitmap containing the picture
-     * @throws IllegalStateException    when SD storage not mounted
-     * @throws IllegalArgumentException
+     * @throws IllegalStateException          if SD storage not mounted
+     * @throws IllegalArgumentException       if Uri pointing to invalid file
+     * @throws java.lang.NullPointerException
      */
-    public static Bitmap readBitmap(final Uri filepath)
+    public static Bitmap readBitmap(final Uri filePath)
             throws IllegalArgumentException, IllegalStateException {
 
-        if (filepath == null) {
+        if (filePath == null) {
             throw new NullPointerException("Uri is empty");
         }
         Bitmap bmp = null;
 
-        synchronized (filepath.getPath()) {
+        synchronized (filePath.getPath()) {
 
             if (isReadable()) {
-                bmp = BitmapFactory.decodeFile(filepath.getPath());
+                bmp = BitmapFactory.decodeFile(filePath.getPath());
             } else {
                 throw new IllegalStateException(E_SD_NOT_MOUNTED);
             }
@@ -138,51 +135,36 @@ public final class ExternalStorageHelper {
 
     }
 
+    private static boolean isReadable() {
+        String state = Environment.getExternalStorageState();
+
+        return Environment.MEDIA_MOUNTED.equals(state)
+                || Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);
+    }
+
     /**
      * Removes file in the given Uri
      *
      * @param toRemove Uri pointing to the file to remove
-     * @throws FileNotFoundException when Uri points to invalid file
-     * @throws IOException           when removal failed
-     * @throws IllegalStateException when sd not writable
+     * @throws FileNotFoundException if Uri points to invalid file
+     * @throws IOException           if removal failed
+     * @throws IllegalStateException if SD not writable
      */
-    public synchronized static void removeFileFromUri(Uri toRemove)
+    public static void removeFileFromUri(Uri toRemove)
             throws IOException, IllegalStateException {
         if (isWritable() && toRemove != null) {
             File bestand = new File(toRemove.getPath());
-            boolean gelukt = removeFile(bestand);
+            boolean success = removeFile(bestand);
 
-            if (!gelukt) {
-                if (!bestand.exists())
-                    throw new FileNotFoundException("Kon " + toRemove.getPath()
-                            + " niet vinden");
-                else
-                    throw new IOException("Kon bestand " + toRemove.getPath()
-                            + " niet verwijderen om onbekende reden");
+            if (!success) {
+                if (!bestand.exists()) {
+                    throw new FileNotFoundException("Couldn't find: " + toRemove.getPath());
+                } else {
+                    throw new IOException("Couldn't remove following file: " + toRemove.getPath());
+                }
             }
         } else if (!isWritable()) {
             throw new IllegalStateException(E_SD_NOT_WRITEABLE);
-        }
-    }
-
-    /**
-     * @throws IOException
-     * @throws IllegalStateException
-     * @see {@link storeBitmap(Context context, Bitmap bmp, String name, boolean
-     * overwriteOnExists)}
-     */
-    public static Uri storeBitmap(Context context, Bitmap bmp, String name)
-            throws IllegalStateException, IOException {
-        return storeBitmap(context, bmp, name, false);
-    }
-
-    private static void closeOutputStream(OutputStream os) {
-        if (os != null) {
-            try {
-                os.close();
-            } catch (IOException e) {
-                Log.w(TAG, "Can't close stream");
-            }
         }
     }
 
@@ -191,22 +173,33 @@ public final class ExternalStorageHelper {
     }
 
     /**
+     * @throws IOException
+     * @throws IllegalStateException if SD not writable
+     * @see {@link #storeBitmap(android.graphics.Bitmap, String, boolean)}
+     */
+    public static Uri storeBitmap(Bitmap bmp, String name)
+            throws IllegalStateException, IOException {
+        return storeBitmap(bmp, name, false);
+    }
+
+    /**
      * Stores bitmap to SD storage, returns Uri of the new storage location
      *
-     * @param context           needed context
      * @param bmp               the bitmap to store
      * @param name              filename
      * @param overwriteOnExists overwrites file with the same name, with false the Uri to the
      *                          double file will be returned
      * @return Uri of new location
-     * @throws IllegalArgumentException if >= 1 parameter is null
+     * @throws IllegalArgumentException SD not writable
      * @throws IOException
      * @throws IllegalStateException
      */
-    private static Uri storeBitmap(Context context, Bitmap bmp,
+    private static Uri storeBitmap(Bitmap bmp,
                                    String name, boolean overwriteOnExists)
             throws IllegalStateException, IOException {
         if (isWritable()) {
+            final Context context = App.getAppContext();
+
             // krijg file object
             final File dir = context
                     .getExternalFilesDir(Environment.DIRECTORY_PICTURES);
@@ -254,6 +247,16 @@ public final class ExternalStorageHelper {
             throw e;
         } finally {
             closeOutputStream(os);
+        }
+    }
+
+    private static void closeOutputStream(OutputStream os) {
+        if (os != null) {
+            try {
+                os.close();
+            } catch (IOException e) {
+                Log.w(TAG, "Can't close stream");
+            }
         }
     }
 }

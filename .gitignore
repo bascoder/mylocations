@@ -49,3 +49,4 @@ $RECYCLE.BIN/
 *.msp
 
 .idea/
+app/app.iml

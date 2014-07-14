@@ -62,11 +62,6 @@ public class PlaceDownloaderTask extends
         mParent = new WeakReference<Callback>(parent);
     }
 
-    private Uri generateFlagURL(String countryCode) {
-        return Uri.parse("http://www.geonames.org/flags/x/" + countryCode
-                + ".gif");
-    }
-
     @Override
     protected nl.basvanmarwijk.mylocations.db.dao.Location doInBackground(Location... location) {
 
@@ -84,7 +79,7 @@ public class PlaceDownloaderTask extends
 
             Uri newPath = null;
             try {
-                newPath = ExternalStorageHelper.storeBitmap(App.getAppContext(),
+                newPath = ExternalStorageHelper.storeBitmap(
                         getFlagFromURL(Uri.parse(place.getFlag_path())), place.getCountry());
             } catch (IllegalStateException e) {
                 Log.w(TAG, e.getLocalizedMessage());
@@ -115,42 +110,6 @@ public class PlaceDownloaderTask extends
     @Override
     protected void onProgressUpdate(Byte... values) {
 
-    }
-
-    private void addToDatabase(nl.basvanmarwijk.mylocations.db.dao.Location item) {
-        DBManager dbManager = App.getDbManager();
-        dbManager.insertLocation(item, true);
-    }
-
-    private Bitmap getFlagFromURL(Uri flagUrl) {
-
-        InputStream in = null;
-
-        Log.i("temp", flagUrl.toString());
-
-        try {
-            URL url = new URL(flagUrl.toString());
-            mHttpUrl = (HttpURLConnection) url.openConnection();
-            in = mHttpUrl.getInputStream();
-
-            return BitmapFactory.decodeStream(in);
-
-        } catch (MalformedURLException e) {
-            Log.e(TAG, e.toString());
-        } catch (IOException e) {
-            Log.e(TAG, e.toString());
-        } finally {
-            try {
-                if (null != in) {
-                    in.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            mHttpUrl.disconnect();
-        }
-
-        return null;
     }
 
     /**
@@ -195,6 +154,47 @@ public class PlaceDownloaderTask extends
         }
 
         return item.toLocation(false);
+    }
+
+    private Bitmap getFlagFromURL(Uri flagUrl) {
+
+        InputStream in = null;
+
+        Log.i("temp", flagUrl.toString());
+
+        try {
+            URL url = new URL(flagUrl.toString());
+            mHttpUrl = (HttpURLConnection) url.openConnection();
+            in = mHttpUrl.getInputStream();
+
+            return BitmapFactory.decodeStream(in);
+
+        } catch (MalformedURLException e) {
+            Log.e(TAG, e.toString());
+        } catch (IOException e) {
+            Log.e(TAG, e.toString());
+        } finally {
+            try {
+                if (null != in) {
+                    in.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mHttpUrl.disconnect();
+        }
+
+        return null;
+    }
+
+    private void addToDatabase(nl.basvanmarwijk.mylocations.db.dao.Location item) {
+        DBManager dbManager = App.getDbManager();
+        dbManager.insertLocation(item, true);
+    }
+
+    private Uri generateFlagURL(String countryCode) {
+        return Uri.parse("http://www.geonames.org/flags/x/" + countryCode
+                + ".gif");
     }
 
     /**
