@@ -45,37 +45,31 @@ import nl.basvanmarwijk.mylocations.logic.PlaceDownloaderTask;
  * Activities containing this fragment MUST implement the {@link Callbacks}
  * interface.
  *
+ * TODO on item click gmaps api
+ *
  * @author Bas
  * @since revision 1
- * @version 1.5 uses {@link android.support.v4.widget.CursorAdapter}
+ * @version 2.1 moved PlaceDownloaderTask.Callback in separate inner class
+ * @version 2.0 uses {@link android.support.v4.widget.CursorAdapter}
  * @version 1.4 onResume refreshes the list adapter
  * @version 1.3 compatible with {@link PlaceDownloaderTask} version 2.1
  * @version 1.2 progress circle
  * @version 1.1 loads locationitems in de background
  * @version 1.0 creation
  */
-public class LocationItemListFragment extends ListFragment implements
-        PlaceDownloaderTask.Callback {
+public class LocationItemListFragment extends ListFragment {
 
     /**
      * The serialization (saved instance state) Bundle key representing the
      * activated item position. Only used on tablets.
      */
     private static final String STATE_ACTIVATED_POSITION = "activated_position";
-    /**
-     * A dummy implementation of the {@link Callbacks} interface that does
-     * nothing. Used only when this fragment is not attached to an activity.
-     */
-    private static Callbacks sDummyCallbacks = new Callbacks() {
-        @Override
-        public void onItemSelected(nl.basvanmarwijk.mylocations.db.dao.Location item) {
-        }
-    };
+
     /**
      * The fragment's current callback object, which is notified of list item
      * clicks.
      */
-    private Callbacks mCallbacks = sDummyCallbacks;
+    private Callbacks mCallbacks = null;
     private BaseAdapter adapter;
     private boolean refreshNeeded = true;
     /**
@@ -154,7 +148,7 @@ public class LocationItemListFragment extends ListFragment implements
                     toggleProgressBar(true);
 
                     PlaceDownloaderTask downloader = new PlaceDownloaderTask(
-                            LocationItemListFragment.this);
+                            new PlaceDownloaderListener());
                     downloader.execute(locatie);
 
                 } else {
@@ -200,7 +194,7 @@ public class LocationItemListFragment extends ListFragment implements
         super.onDetach();
 
         // Reset the active callbacks interface to the dummy implementation.
-        mCallbacks = sDummyCallbacks;
+        mCallbacks = null;
     }
 
     /**
@@ -270,25 +264,6 @@ public class LocationItemListFragment extends ListFragment implements
         );
     }
 
-    @Override
-    public void onLoad(nl.basvanmarwijk.mylocations.db.dao.Location item) {
-
-        // if no flag path is set, set the dummy picture
-        if (item.getFlag_path() == null) {
-            Uri dummyURI = Uri.parse("android.resource://"
-                    + getActivity().getPackageName() + "/drawable/stub.jpg");
-            item.setFlag_path(dummyURI.getPath());
-        }
-        toggleProgressBar(false);
-
-        adapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void onProgress(byte progress) {
-        // ignore
-    }
-
     /**
      * A callback interface that all activities containing this fragment must
      * implement. This mechanism allows activities to be notified of item
@@ -299,5 +274,26 @@ public class LocationItemListFragment extends ListFragment implements
          * Callback for when an item has been selected.
          */
         public void onItemSelected(nl.basvanmarwijk.mylocations.db.dao.Location item);
+    }
+
+    private class PlaceDownloaderListener implements PlaceDownloaderTask.Callback {
+        @Override
+        public void onLoad(nl.basvanmarwijk.mylocations.db.dao.Location item) {
+
+            // if no flag path is set, set the dummy picture
+            if (item.getFlag_path() == null) {
+                Uri dummyURI = Uri.parse("android.resource://"
+                        + getActivity().getPackageName() + "/drawable/stub.jpg");
+                item.setFlag_path(dummyURI.getPath());
+            }
+            toggleProgressBar(false);
+
+            adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onProgress(byte progress) {
+            // ignore
+        }
     }
 }

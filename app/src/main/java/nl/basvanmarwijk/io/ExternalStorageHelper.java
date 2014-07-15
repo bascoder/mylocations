@@ -45,7 +45,7 @@ import nl.basvanmarwijk.mylocations.App;
  * @version 1.4 fixed bug where {@link #storeBitmap(android.graphics.Bitmap, String)} returns null if file already exists
  * @version 1.3 extensions
  * @version 1.2 null checks
- * @version 1.1 support voor mediafiles toevoegen en verwijderen
+ * @version 1.1 support for adding and removing media files
  * @version 1.0 creation
  * @since revision 1
  */
@@ -262,7 +262,7 @@ public final class ExternalStorageHelper {
             try {
                 os.close();
             } catch (IOException e) {
-                Log.w(TAG, "Can't close stream");
+                Log.w(TAG, "Couldn't close output stream");
             }
         }
     }

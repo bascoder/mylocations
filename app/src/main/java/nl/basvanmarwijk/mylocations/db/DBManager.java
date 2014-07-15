@@ -28,9 +28,12 @@ import nl.basvanmarwijk.mylocations.db.dao.DaoMaster;
 import nl.basvanmarwijk.mylocations.db.dao.DaoSession;
 import nl.basvanmarwijk.mylocations.db.dao.Location;
 import nl.basvanmarwijk.mylocations.db.dao.LocationDao;
+import nl.basvanmarwijk.mylocations.db.dao.Location_pictureDao;
+import nl.basvanmarwijk.mylocations.db.dao.Location_timeDao;
 
 /**
  * @author Bas van Marwijk
+ * @version 1.1 marked CRUD operations Depecrated TODO move to separate class
  * @version 1.0 - creation
  * @since 6-7-2014
  */
@@ -58,6 +61,20 @@ public class DBManager implements Closeable {
         debug();
     }
 
+    public void debug() {
+        Log.w(TAG, "Don't run in production code");
+        Cursor c = getAllColumnsCursor();
+        while (c.moveToNext()) {
+            Log.v(TAG, "id:" + c.getLong(c.getColumnIndex(LocationDao.Properties.Id.columnName)));
+        }
+    }
+
+    public Cursor getAllColumnsCursor() {
+        LocationDao locationDao = daoSession.getLocationDao();
+        return db.query(locationDao.getTablename(), locationDao.getAllColumns(), null,
+                null, null, null, null);
+    }
+
     public static DBManager createDBManager(final Context applicationContext) {
         if (!OPEN) {
             return new DBManager(applicationContext);
@@ -67,21 +84,25 @@ public class DBManager implements Closeable {
 
     }
 
-    public Cursor getAllColumnsCursor() {
-        LocationDao locationDao = daoSession.getLocationDao();
-        return db.query(locationDao.getTablename(), locationDao.getAllColumns(), null,
-                null, null, null, null);
+    public Location_pictureDao getLocationPictureDao() {
+        return daoSession.getLocation_pictureDao();
     }
 
-    private LocationDao getLocationDao() {
-        return daoSession.getLocationDao();
+    public Location_timeDao getLocationTimeDao() {
+        return daoSession.getLocation_timeDao();
     }
 
+    @Deprecated
     public Location getLocationById(long id) {
         LocationDao locationDao = getLocationDao();
         return locationDao.load(id);
     }
 
+    public LocationDao getLocationDao() {
+        return daoSession.getLocationDao();
+    }
+
+    @Deprecated
     public void deleteLocation(Location item) {
         getLocationDao().delete(item);
     }
@@ -91,6 +112,7 @@ public class DBManager implements Closeable {
      * @param catchConstraintException with this flag set to false the method throws SQLiteConstraintException
      * @throws SQLiteConstraintException thrown if a constraint has triggered
      */
+    @Deprecated
     public void insertLocation(Location item, boolean catchConstraintException)
             throws SQLiteConstraintException {
         try {
@@ -102,14 +124,7 @@ public class DBManager implements Closeable {
         }
     }
 
-    public void debug() {
-        Log.w(TAG, "Don't run in production code");
-        Cursor c = getAllColumnsCursor();
-        while (c.moveToNext()) {
-            Log.v(TAG, "id:" + c.getLong(c.getColumnIndex(LocationDao.Properties.Id.columnName)));
-        }
-    }
-
+    @Deprecated
     public void updateLocation(Location item) {
         getLocationDao().update(item);
     }

@@ -169,7 +169,7 @@ public class PlaceDownloaderTask extends
 
         InputStream in = null;
 
-        Log.i("temp", flagUrl.toString());
+        Log.i(TAG, flagUrl.toString());
 
         try {
             URL url = new URL(flagUrl.toString());
@@ -188,7 +188,7 @@ public class PlaceDownloaderTask extends
                     in.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.w(TAG, "Couldn't close input stream");
             }
             mHttpUrl.disconnect();
         }
@@ -215,7 +215,7 @@ public class PlaceDownloaderTask extends
      */
     public interface Callback {
         /**
-         * Called on load completation
+         * Called on load completion
          *
          * @param loadedItem item that has been downloaded
          */

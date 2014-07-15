@@ -44,6 +44,7 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import nl.basvanmarwijk.io.ExternalStorageHelper;
 import nl.basvanmarwijk.io.ImageHelper;
@@ -58,10 +59,14 @@ import nl.basvanmarwijk.mylocations.db.dao.Location_picture;
  * either contained in a {@link LocationItemListActivity} in two-pane mode (on
  * tablets) or a {@link LocationItemDetailActivity} on handsets.
  * TODO threads management
+ * TODO use locks everywhere
  * TODO get rid of deprecated LocationItem
  *
  * @author Bas
  * @since revision 1
+ * @version 2.0 (partly) compatible with green dao,
+ *      introduced use of {@link java.util.concurrent.locks.ReentrantReadWriteLock},
+ *      fixed update of imageview
  * @version 1.9 added extra exception handling for file io
  * @version 1.8 confirmation dialog when deleting item
  * @version 1.7 doesn't delete new picture by accident
@@ -85,6 +90,9 @@ public class LocationItemDetailFragment extends Fragment {
     private static final String TAG = LocationItemDetailFragment.class
             .getCanonicalName();
 
+    private ReentrantReadWriteLock.ReadLock itemReadLock;
+    private ReentrantReadWriteLock.WriteLock itemWriteLock;
+
     private volatile Location mItem;
     private Uri pictureUri;
     private View rootView;
@@ -95,6 +103,7 @@ public class LocationItemDetailFragment extends Fragment {
      * fragment (e.g. upon screen orientation changes).
      */
     public LocationItemDetailFragment() {
+
     }
 
     /**
@@ -116,6 +125,10 @@ public class LocationItemDetailFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        ReentrantReadWriteLock itemLock = new ReentrantReadWriteLock();
+        itemReadLock = itemLock.readLock();
+        itemWriteLock = itemLock.writeLock();
 
         // verkrijg de locatie item uit de database
         final Bundle args = getArguments();
@@ -298,23 +311,33 @@ public class LocationItemDetailFragment extends Fragment {
 
             @Override
             protected Void doInBackground(Void... params) {
-                // TODO add pictures to db
-
                 try {
-                    //update in db
-                    App.getDbManager().updateLocation(mItem);
+                    // synchronize mItem
+                    itemWriteLock.lock();
+
+                    DBManager db = App.getDbManager();
+                    Location_picture lp = new Location_picture();
+                    lp.setLocation_id(mItem.getId());
+                    lp.setPicture_path(pictureUri.getPath());
+                    db.getLocationPictureDao().insert(lp);
+
+                    mItem.resetFk_location_picture();
+
                 } catch (Exception e) {
                     getActivity().runOnUiThread(
                             new ToastRunnable(
                                     R.string.toast_could_not_store_picture)
                     );
-                    // schoon mislukte foto op
+                    // clean failed picture
                     try {
                         ExternalStorageHelper.removeFileFromUri(pictureUri);
                     } catch (Exception e2) { // IOException |
                         // IllegalStateException
                         Log.w(TAG, "Could not clean failed picture");
                     }
+                } finally {
+                    // unlock
+                    itemWriteLock.unlock();
                 }
 
                 return null;
@@ -332,12 +355,25 @@ public class LocationItemDetailFragment extends Fragment {
      * Gets Bitmap from mItem and updates into the ImageView
      */
     private void updateImageView() {
+
         if (mItem != null) {
-            final List<Location_picture> pictures = mItem.getFk_location_picture();
-            if (pictures.isEmpty()) {
-                return;
+            final Uri picLocation;
+            try {
+                itemReadLock.lock();
+
+                final List<Location_picture> pictures = mItem.getFk_location_picture();
+                if (pictures.isEmpty()) {
+                    return;
+                    }
+                picLocation = Uri.parse(
+                        pictures.get(
+                                pictures.size() - 1)
+                                .getPicture_path()
+                );
+            } finally {
+                itemReadLock.unlock();
             }
-            final Uri picLocation = Uri.parse(pictures.get(pictures.size() - 1).getPicture_path());
+
             if (picLocation != null) {
                 new AsyncTask<Void, Void, Bitmap>() {
                     @Override
@@ -380,14 +416,14 @@ public class LocationItemDetailFragment extends Fragment {
                 }.execute();
 
             }
-        }
+            }
     }
 
     /**
      * Runs specified toast message
      *
      * @author Bas
-     * @version 1.1 perfroms check so it runs always on the ui thread
+     * @version 1.1 performs check so it always runs on the ui thread
      */
     private class ToastRunnable implements Runnable {
 
