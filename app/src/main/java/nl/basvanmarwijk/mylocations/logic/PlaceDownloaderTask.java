@@ -198,7 +198,7 @@ public class PlaceDownloaderTask extends
 
     private void addToDatabase(nl.basvanmarwijk.mylocations.db.dao.Location item) {
         DBManager dbManager = App.getDbManager();
-        dbManager.insertLocation(item, true);
+        dbManager.insertLocation(item);
     }
 
     private Uri generateFlagURL(String countryCode) {

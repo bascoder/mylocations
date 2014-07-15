@@ -29,11 +29,12 @@ import nl.basvanmarwijk.mylocations.db.dao.DaoSession;
 import nl.basvanmarwijk.mylocations.db.dao.Location;
 import nl.basvanmarwijk.mylocations.db.dao.LocationDao;
 import nl.basvanmarwijk.mylocations.db.dao.Location_pictureDao;
+import nl.basvanmarwijk.mylocations.db.dao.Location_time;
 import nl.basvanmarwijk.mylocations.db.dao.Location_timeDao;
 
 /**
  * @author Bas van Marwijk
- * @version 1.1 marked CRUD operations Depecrated TODO move to separate class
+ * @version 1.1 marked CRUD operations Depecrated TODO move them to separate class
  * @version 1.0 - creation
  * @since 6-7-2014
  */
@@ -88,10 +89,6 @@ public class DBManager implements Closeable {
         return daoSession.getLocation_pictureDao();
     }
 
-    public Location_timeDao getLocationTimeDao() {
-        return daoSession.getLocation_timeDao();
-    }
-
     @Deprecated
     public Location getLocationById(long id) {
         LocationDao locationDao = getLocationDao();
@@ -109,19 +106,22 @@ public class DBManager implements Closeable {
 
     /**
      * @param item                     item to insert
-     * @param catchConstraintException with this flag set to false the method throws SQLiteConstraintException
-     * @throws SQLiteConstraintException thrown if a constraint has triggered
      */
     @Deprecated
-    public void insertLocation(Location item, boolean catchConstraintException)
-            throws SQLiteConstraintException {
+    public void insertLocation(Location item) {
         try {
             getLocationDao().insert(item);
+            Location_time lt = new Location_time();
+            lt.setLocation_id(item.getId());
+            lt.setDatetimestamp(System.currentTimeMillis());
+            getLocationTimeDao();
         } catch (SQLiteConstraintException e) {
-            if (!catchConstraintException) {
-                throw e;
-            }
+            // same location
         }
+    }
+
+    public Location_timeDao getLocationTimeDao() {
+        return daoSession.getLocation_timeDao();
     }
 
     @Deprecated
