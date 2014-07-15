@@ -27,6 +27,8 @@ import java.io.InputStream;
 /**
  * @author Bas van Marwijk
  * @version 1.0 - creation
+ * @version 1.1 usage of StringBuilder instead of String[] for less resource
+ *          overhead
  * @since 25-6-2014
  */
 public class FileHelper {

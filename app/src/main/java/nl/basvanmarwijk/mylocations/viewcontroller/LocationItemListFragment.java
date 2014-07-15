@@ -41,13 +41,18 @@ import nl.basvanmarwijk.mylocations.logic.PlaceDownloaderTask;
  * tablet devices by allowing list items to be given an 'activated' state upon
  * selection. This helps indicate which item is currently being viewed in a
  * {@link LocationItemDetailFragment}.
- * <p/>
+ * <p>
  * Activities containing this fragment MUST implement the {@link Callbacks}
  * interface.
  *
  * @author Bas
- * @version 1.0 creation
  * @since revision 1
+ * @version 1.5 uses {@link android.support.v4.widget.CursorAdapter}
+ * @version 1.4 onResume refreshes the list adapter
+ * @version 1.3 compatible with {@link PlaceDownloaderTask} version 2.1
+ * @version 1.2 progress circle
+ * @version 1.1 loads locationitems in de background
+ * @version 1.0 creation
  */
 public class LocationItemListFragment extends ListFragment implements
         PlaceDownloaderTask.Callback {
@@ -163,25 +168,15 @@ public class LocationItemListFragment extends ListFragment implements
         setListAdapter(adapter);
     }
 
+    /*
+     * (non-Javadoc)
+     *
+     * @see android.support.v4.app.Fragment#onResume()
+     */
     @Override
-    public void onDetach() {
-        super.onDetach();
-
-        // Reset the active callbacks interface to the dummy implementation.
-        mCallbacks = sDummyCallbacks;
-    }
-
-    @Override
-    public void onListItemClick(ListView listView, View view, int position,
-                                long id) {
-        super.onListItemClick(listView, view, position, id);
-
-        // Notify the active callbacks interface (the activity, if the
-        // fragment is attached to one) that an item has been selected.
-        if (adapter.getCount() >= position) {
-            mCallbacks.onItemSelected((nl.basvanmarwijk.mylocations.db.dao.Location) adapter
-                    .getItem(position - 1));
-        }
+    public void onResume() {
+        super.onResume();
+        refreshAdapter();
     }
 
     @Override
@@ -191,6 +186,39 @@ public class LocationItemListFragment extends ListFragment implements
             // Serialize and persist the activated item position.
             outState.putInt(STATE_ACTIVATED_POSITION, mActivatedPosition);
         }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        // maybe item is edited in detailfragment
+        refreshNeeded = true;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+
+        // Reset the active callbacks interface to the dummy implementation.
+        mCallbacks = sDummyCallbacks;
+    }
+
+    /**
+     * Refreshes list adapter
+     */
+    private void refreshAdapter() {
+        if (refreshNeeded) {
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    /**
+     * Sets progress bar to boolean enabled
+     *
+     * @param enabled enable the progressbar with true, disable with false
+     */
+    private void toggleProgressBar(boolean enabled) {
+        getActivity().setProgressBarIndeterminateVisibility(enabled);
     }
 
     @Override
@@ -206,44 +234,17 @@ public class LocationItemListFragment extends ListFragment implements
 
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see android.support.v4.app.Fragment#onResume()
-     */
     @Override
-    public void onResume() {
-        super.onResume();
-        refreshAdapter();
-    }
+    public void onListItemClick(ListView listView, View view, int position,
+                                long id) {
+        super.onListItemClick(listView, view, position, id);
 
-    /**
-     * Refreshes list adapter
-     */
-    private void refreshAdapter() {
-        if (refreshNeeded) {
-            adapter.notifyDataSetChanged();
+        // Notify the active callbacks interface (the activity, if the
+        // fragment is attached to one) that an item has been selected.
+        if (adapter.getCount() >= position) {
+            mCallbacks.onItemSelected((nl.basvanmarwijk.mylocations.db.dao.Location) adapter
+                    .getItem(position - 1));
         }
-    }
-
-    /**
-     * Turns on activate-on-click mode. When this mode is on, list items will be
-     * given the 'activated' state when touched.
-     */
-    public void setActivateOnItemClick(boolean activateOnItemClick) {
-        // When setting CHOICE_MODE_SINGLE, ListView will automatically
-        // give items the 'activated' state when touched.
-        getListView().setChoiceMode(
-                activateOnItemClick ? ListView.CHOICE_MODE_SINGLE
-                        : ListView.CHOICE_MODE_NONE
-        );
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        // maybe item is edited in detailfragment
-        refreshNeeded = true;
     }
 
     private void setActivatedPosition(int position) {
@@ -257,12 +258,16 @@ public class LocationItemListFragment extends ListFragment implements
     }
 
     /**
-     * Sets progress bar to boolean enabled
-     *
-     * @param enabled enable the progressbar with true, disable with false
+     * Turns on activate-on-click mode. When this mode is on, list items will be
+     * given the 'activated' state when touched.
      */
-    private void toggleProgressBar(boolean enabled) {
-        getActivity().setProgressBarIndeterminateVisibility(enabled);
+    public void setActivateOnItemClick(boolean activateOnItemClick) {
+        // When setting CHOICE_MODE_SINGLE, ListView will automatically
+        // give items the 'activated' state when touched.
+        getListView().setChoiceMode(
+                activateOnItemClick ? ListView.CHOICE_MODE_SINGLE
+                        : ListView.CHOICE_MODE_NONE
+        );
     }
 
     @Override

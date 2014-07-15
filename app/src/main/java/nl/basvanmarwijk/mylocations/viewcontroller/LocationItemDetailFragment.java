@@ -61,8 +61,17 @@ import nl.basvanmarwijk.mylocations.db.dao.Location_picture;
  * TODO get rid of deprecated LocationItem
  *
  * @author Bas
- * @version 1.0 creation
  * @since revision 1
+ * @version 1.9 added extra exception handling for file io
+ * @version 1.8 confirmation dialog when deleting item
+ * @version 1.7 doesn't delete new picture by accident
+ * @version 1.6 progress circle
+ * @version 1.5 bitmap scales and loads in separate thread
+ * @version 1.4 storage and db tasks in separate threads
+ * @version 1.3 add picture view
+ * @version 1.2 add picture to location item
+ * @version 1.1 remove item
+ * @version 1.0 creation
  */
 public class LocationItemDetailFragment extends Fragment {
 
@@ -284,6 +293,41 @@ public class LocationItemDetailFragment extends Fragment {
         getActivity().finish();
     }
 
+    private void updateCameraResult() {
+        new AsyncTask<Void, Void, Void>() {
+
+            @Override
+            protected Void doInBackground(Void... params) {
+                // TODO add pictures to db
+
+                try {
+                    //update in db
+                    App.getDbManager().updateLocation(mItem);
+                } catch (Exception e) {
+                    getActivity().runOnUiThread(
+                            new ToastRunnable(
+                                    R.string.toast_could_not_store_picture)
+                    );
+                    // schoon mislukte foto op
+                    try {
+                        ExternalStorageHelper.removeFileFromUri(pictureUri);
+                    } catch (Exception e2) { // IOException |
+                        // IllegalStateException
+                        Log.w(TAG, "Could not clean failed picture");
+                    }
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void result) {
+                updateImageView();
+            }
+
+        }.execute();
+    }
+
     /**
      * Gets Bitmap from mItem and updates into the ImageView
      */
@@ -337,41 +381,6 @@ public class LocationItemDetailFragment extends Fragment {
 
             }
         }
-    }
-
-    private void updateCameraResult() {
-        new AsyncTask<Void, Void, Void>() {
-
-            @Override
-            protected Void doInBackground(Void... params) {
-                // TODO add pictures to db
-
-                try {
-                    //update in db
-                    App.getDbManager().updateLocation(mItem);
-                } catch (Exception e) {
-                    getActivity().runOnUiThread(
-                            new ToastRunnable(
-                                    R.string.toast_could_not_store_picture)
-                    );
-                    // schoon mislukte foto op
-                    try {
-                        ExternalStorageHelper.removeFileFromUri(pictureUri);
-                    } catch (Exception e2) { // IOException |
-                        // IllegalStateException
-                        Log.w(TAG, "Could not clean failed picture");
-                    }
-                }
-
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void result) {
-                updateImageView();
-            }
-
-        }.execute();
     }
 
     /**

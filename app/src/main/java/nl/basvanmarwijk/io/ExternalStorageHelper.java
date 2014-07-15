@@ -38,7 +38,14 @@ import nl.basvanmarwijk.mylocations.App;
  * Class with static io helper methods
  *
  * @author Bas van Marwijk
- * @version 1.1 - removed context parameters parameters, coupled with {@link nl.basvanmarwijk.mylocations.App}
+ * @version 2.1 - removed context parameters parameters, coupled with {@link nl.basvanmarwijk.mylocations.App}
+ * @version 2.0 added proper exception handling, removed useless synchronization
+ * @version 1.6 read/write actions synchronized
+ * @version 1.5 storeBitmap long method refactor
+ * @version 1.4 fixed bug where {@link #storeBitmap(android.graphics.Bitmap, String)} returns null if file already exists
+ * @version 1.3 extensions
+ * @version 1.2 null checks
+ * @version 1.1 support voor mediafiles toevoegen en verwijderen
  * @version 1.0 creation
  * @since revision 1
  */

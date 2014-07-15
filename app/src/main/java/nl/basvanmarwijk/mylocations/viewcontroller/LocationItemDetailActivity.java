@@ -29,12 +29,14 @@ import nl.basvanmarwijk.mylocations.R;
  * is only used on handset devices. On tablet-size devices, item details are
  * presented side-by-side with a list of items in a
  * {@link LocationItemListActivity}.
- * <p/>
+ * <p>
  * This activity is mostly just a 'shell' activity containing nothing more than
  * a {@link LocationItemDetailFragment}.
  *
- * @version 1
  * @since revision 1
+ * @version 1.1: actionbar incompatiblity gehide voor APIs lager dan honeycomp
+ * @version 1
+ *
  */
 public class LocationItemDetailActivity extends ActionBarActivity {
 

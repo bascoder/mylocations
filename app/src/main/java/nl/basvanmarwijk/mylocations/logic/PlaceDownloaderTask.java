@@ -41,11 +41,20 @@ import nl.basvanmarwijk.mylocations.LocationItem;
 import nl.basvanmarwijk.mylocations.db.DBManager;
 
 /**
- * Downloads location info from geonames.org and adds new location item to database
+ * Downloads location info from geonames.org
  *
- * @author Bas van Marwijk - based on PlaceDownloaderTask of University of Marylands's mooc
- * @version 1.0 creation, uses geonames via webapi
+ * @author Bas van Marwijk
  * @since revision 1
+ * @version 2.4 fixed dependency with context and memory leak
+ * @version 2.3 handles exceptions thrown by file io
+ * @version 2.2 switched progress update to Byte, progress doesn't count higher
+ *          than 100
+ * @version 2.1 Added {@link Callback} interface for generic access, broke dependency
+ *          with viewcontroller
+ * @version 2.0 28-04-2014, switch to Geonames Java library API
+ * @version 1.1 call to different method in {@link nl.basvanmarwijk.mylocations.viewcontroller.LocationItemListFragment}
+ * @version 1.0 creation, uses geonames via webapi
+ *
  */
 public class PlaceDownloaderTask extends
         AsyncTask<Location, Byte, nl.basvanmarwijk.mylocations.db.dao.Location> {
