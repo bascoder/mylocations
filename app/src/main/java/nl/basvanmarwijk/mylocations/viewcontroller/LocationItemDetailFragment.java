@@ -397,6 +397,9 @@ public class LocationItemDetailFragment extends Fragment {
                         } catch (IllegalStateException e) {
                             getActivity().runOnUiThread(
                                     new ToastRunnable(R.string.sd_card_in_use));
+                        } catch(IllegalArgumentException e) {
+                            //ignore
+                            //TODO remove corrupt uri from db
                         }
 
                         return b;
