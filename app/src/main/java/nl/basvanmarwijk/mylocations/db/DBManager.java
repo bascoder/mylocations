@@ -24,6 +24,7 @@ import android.util.Log;
 
 import java.io.Closeable;
 
+import de.greenrobot.dao.query.WhereCondition;
 import nl.basvanmarwijk.mylocations.db.dao.DaoMaster;
 import nl.basvanmarwijk.mylocations.db.dao.DaoSession;
 import nl.basvanmarwijk.mylocations.db.dao.Location;
@@ -111,23 +112,45 @@ public class DBManager implements Closeable {
     public void insertLocation(Location item) {
         try {
             getLocationDao().insert(item);
-            Location_time lt = new Location_time();
-            lt.setLocation_id(item.getId());
-            lt.setDatetimestamp(System.currentTimeMillis());
-            getLocationTimeDao();
+
         } catch (SQLiteConstraintException e) {
             // same location
             Log.e(TAG, e.getMessage());
         }
+        // insert location time
+        insertLocationTime(item);
+    }
+
+    private void insertLocationTime(Location location) {
+        Location_time lt = new Location_time();
+
+        Long itemId = location.getId();
+        if (itemId == null) {
+
+            location = getLocationDao()
+                    .queryBuilder()
+                    .where(
+                            new WhereCondition
+                                    .StringCondition("PLACE ='"
+                                    + location.getPlace()
+                                    + "'"))
+                    .build()
+                    .unique();
+            if(location == null) return;
+
+            itemId = location.getId();
+        }
+
+        lt.setLocation_id(itemId);
+        lt.setDatetimestamp(System.currentTimeMillis());
+
+        getLocationTimeDao().insert(lt);
+
+        location.getFk_location_time().add(lt);
     }
 
     public Location_timeDao getLocationTimeDao() {
         return daoSession.getLocation_timeDao();
-    }
-
-    @Deprecated
-    public void updateLocation(Location item) {
-        getLocationDao().update(item);
     }
 
     @Override
