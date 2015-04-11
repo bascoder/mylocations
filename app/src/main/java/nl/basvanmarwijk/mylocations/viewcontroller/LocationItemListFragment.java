@@ -18,6 +18,7 @@ package nl.basvanmarwijk.mylocations.viewcontroller;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.database.DataSetObserver;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -26,9 +27,10 @@ import android.support.v4.widget.CursorAdapter;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import java.lang.ref.WeakReference;
 
 import nl.basvanmarwijk.mylocations.App;
 import nl.basvanmarwijk.mylocations.R;
@@ -64,14 +66,15 @@ public class LocationItemListFragment extends ListFragment {
      * activated item position. Only used on tablets.
      */
     private static final String STATE_ACTIVATED_POSITION = "activated_position";
+    private static final String TAG = LocationItemListFragment.class.getCanonicalName();
 
     /**
      * The fragment's current callback object, which is notified of list item
      * clicks.
      */
     private Callbacks mCallbacks = null;
-    private BaseAdapter adapter;
-    private boolean refreshNeeded = true;
+    private CursorAdapter adapter;
+    private AdapterDataListener adapterDataListener;
     /**
      * The current activated item position. Only used on tablets.
      */
@@ -93,13 +96,15 @@ public class LocationItemListFragment extends ListFragment {
             throw new IllegalStateException(
                     "Activity must implement fragment's callbacks.");
         }
+
+        adapter = new LocationItemCursorAdapter(App.getAppContext(),
+                App.getDbManager().getAllColumnsCursor(),
+                CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+
+        adapterDataListener = new AdapterDataListener(this);
+        adapter.registerDataSetObserver(adapterDataListener);
+
         mCallbacks = (Callbacks) activity;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
     }
 
     /*
@@ -111,11 +116,6 @@ public class LocationItemListFragment extends ListFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
-        //TODO other constructor flag
-        adapter = new LocationItemCursorAdapter(App.getAppContext(),
-                App.getDbManager().getAllColumnsCursor(),
-                CursorAdapter.FLAG_AUTO_REQUERY);
 
         final View btn_add = getActivity().getLayoutInflater().inflate(
                 R.layout.add_button, null);
@@ -185,8 +185,6 @@ public class LocationItemListFragment extends ListFragment {
     @Override
     public void onStop() {
         super.onStop();
-        // maybe item is edited in detailfragment
-        refreshNeeded = true;
     }
 
     @Override
@@ -195,15 +193,24 @@ public class LocationItemListFragment extends ListFragment {
 
         // Reset the active callbacks interface to the dummy implementation.
         mCallbacks = null;
+
+        adapter.unregisterDataSetObserver(adapterDataListener);
     }
 
     /**
      * Refreshes list adapter
      */
     private void refreshAdapter() {
-        if (refreshNeeded) {
-            adapter.notifyDataSetChanged();
-        }
+        Log.d(TAG, "Refreshing adapter");
+        adapter.swapCursor(App.getDbManager().getAllColumnsCursor());
+        adapter.notifyDataSetChanged();
+
+        refreshListView();
+    }
+
+    private void refreshListView() {
+        //adapter.swapCursor(App.getDbManager().getAllColumnsCursor());
+        getListView().setAdapter(adapter);
     }
 
     /**
@@ -276,6 +283,30 @@ public class LocationItemListFragment extends ListFragment {
         public void onItemSelected(nl.basvanmarwijk.mylocations.db.dao.Location item);
     }
 
+    private static class AdapterDataListener extends DataSetObserver {
+        private WeakReference<LocationItemListFragment> mParent;
+
+        private AdapterDataListener(LocationItemListFragment mParent) {
+            this.mParent = new WeakReference<LocationItemListFragment>(mParent);
+        }
+
+        @Override
+        public void onChanged() {
+            super.onChanged();
+
+            LocationItemListFragment parent = mParent.get();
+            if (parent != null) {
+                parent.refreshListView();
+            }
+        }
+
+        @Override
+        public void onInvalidated() {
+            super.onInvalidated();
+            //TODO implement
+        }
+    }
+
     private class PlaceDownloaderListener implements PlaceDownloaderTask.Callback {
         @Override
         public void onLoad(nl.basvanmarwijk.mylocations.db.dao.Location item) {
@@ -288,7 +319,7 @@ public class LocationItemListFragment extends ListFragment {
             }
             toggleProgressBar(false);
 
-            adapter.notifyDataSetChanged();
+            refreshAdapter();
         }
 
         @Override
