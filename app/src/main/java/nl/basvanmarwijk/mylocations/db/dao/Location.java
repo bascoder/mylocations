@@ -10,9 +10,11 @@ import de.greenrobot.dao.DaoException;
  */
 public class Location {
 
-    private long id;
+    private Long id;
     private String flag_path;
+    /** Not-null value. */
     private String country;
+    /** Not-null value. */
     private String place;
     private Double longitude;
     private Double latitude;
@@ -30,11 +32,11 @@ public class Location {
     public Location() {
     }
 
-    public Location(long id) {
+    public Location(Long id) {
         this.id = id;
     }
 
-    public Location(long id, String flag_path, String country, String place, Double longitude, Double latitude, Double altitude) {
+    public Location(Long id, String flag_path, String country, String place, Double longitude, Double latitude, Double altitude) {
         this.id = id;
         this.flag_path = flag_path;
         this.country = country;
@@ -50,11 +52,11 @@ public class Location {
         myDao = daoSession != null ? daoSession.getLocationDao() : null;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -66,18 +68,22 @@ public class Location {
         this.flag_path = flag_path;
     }
 
+    /** Not-null value. */
     public String getCountry() {
         return country;
     }
 
+    /** Not-null value; ensure this value is available before it is saved to the database. */
     public void setCountry(String country) {
         this.country = country;
     }
 
+    /** Not-null value. */
     public String getPlace() {
         return place;
     }
 
+    /** Not-null value; ensure this value is available before it is saved to the database. */
     public void setPlace(String place) {
         this.place = place;
     }

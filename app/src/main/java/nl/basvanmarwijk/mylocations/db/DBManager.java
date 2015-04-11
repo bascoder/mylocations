@@ -117,6 +117,7 @@ public class DBManager implements Closeable {
             getLocationTimeDao();
         } catch (SQLiteConstraintException e) {
             // same location
+            Log.e(TAG, e.getMessage());
         }
     }
 
