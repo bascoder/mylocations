@@ -19,6 +19,7 @@ package nl.basvanmarwijk.mylocations.viewcontroller;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.support.v4.widget.CursorAdapter;
 import android.util.Log;
@@ -27,6 +28,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import nl.basvanmarwijk.io.ExternalStorageHelper;
 import nl.basvanmarwijk.mylocations.App;
@@ -45,7 +51,7 @@ public class LocationItemCursorAdapter extends CursorAdapter {
 
     /**
      * Constructor that allows control over auto-requery.  It is recommended
-     * you not use this, but instead java.lang.String{@link #CursorAdapter(android.content.Context, android.database.Cursor, int)}.
+     * you not use this, but instead java.lang.String{@link CursorAdapter(android.content.Context, android.database.Cursor, int)}.
      * When using this constructor, {@link #FLAG_REGISTER_CONTENT_OBSERVER}
      * will always be set.
      *
@@ -136,13 +142,48 @@ public class LocationItemCursorAdapter extends CursorAdapter {
         String place = c.getString(LocationDao.Properties.Place.ordinal);
         String flagUri = c.getString(LocationDao.Properties.Flag_path.ordinal);
 
-        Bitmap bmp = ExternalStorageHelper.readBitmap(Uri.parse(flagUri));
+        Bitmap bmp;
+        try {
+            final Uri uri = Uri.parse(flagUri);
+            bmp = ExternalStorageHelper.readBitmap(uri);
+        } catch (IllegalArgumentException e) {
+            Log.e(TAG, "Could not open bitmap, falling back on placeholder");
+            Log.e(TAG, e.getMessage());
+
+            bmp = getStub(context);
+        }
 
         holder.place.setText(context.getResources().getString(R.string.tv_place)
                 + place);
         holder.country.setText(context.getResources().getString(R.string.tv_country)
                 + country);
         holder.flag.setImageBitmap(bmp);
+    }
+
+    private Bitmap getStub(Context context) {
+        return BitmapFactory.decodeResource(context.getResources(), R.drawable.stub);
+    }
+
+    private Bitmap readFromHttp(Uri uri) {
+        URL url;
+        InputStream is = null;
+        try {
+            url = new URL(uri.toString());
+            is = url.openStream();
+
+            return BitmapFactory.decodeStream(is);
+        } catch (MalformedURLException e) {
+            Log.e(TAG, e.getMessage());
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage());
+        } finally {
+            if (is != null) try {
+                is.close();
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage());
+            }
+        }
+        return getStub(mContext);
     }
 
     /**

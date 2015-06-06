@@ -110,15 +110,33 @@ public class DBManager implements Closeable {
      */
     @Deprecated
     public void insertLocation(Location item) {
+        final LocationDao dao = getLocationDao();
         try {
-            getLocationDao().insert(item);
+
+            dao.insert(item);
 
         } catch (SQLiteConstraintException e) {
             // same location
             Log.e(TAG, e.getMessage());
+            tryUpdate(item, dao);
         }
         // insert location time
         insertLocationTime(item);
+    }
+
+    private void tryUpdate(Location item, LocationDao dao) {
+        try {
+            long id = dao.queryBuilder()
+                    .where(
+                            LocationDao
+                                    .Properties
+                                    .Place.eq(item.getPlace()))
+                    .unique().getId();
+            item.setId(id);
+            dao.update(item);
+        } catch (Exception ex) {
+            Log.w(TAG, "Tried to update item: " + item.toString());
+        }
     }
 
     private void insertLocationTime(Location location) {

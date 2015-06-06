@@ -86,16 +86,16 @@ public class PlaceDownloaderTask extends
             // bijna klaar
             publishProgress((byte) 60);
 
-            Uri newPath = null;
+            Uri newPath;
             try {
                 newPath = ExternalStorageHelper.storeBitmap(
                         getFlagFromURL(Uri.parse(place.getFlag_path())), place.getCountry());
+                place.setFlag_path(newPath.getPath());
             } catch (IllegalStateException e) {
                 Log.w(TAG, e.getLocalizedMessage());
             } catch (IOException e) {
                 Log.e(TAG, e.getLocalizedMessage());
             }
-            place.setFlag_path(newPath.getPath());
 
             addToDatabase(place);
         } else {
